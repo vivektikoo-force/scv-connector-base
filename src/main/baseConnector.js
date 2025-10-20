@@ -1092,9 +1092,6 @@ export async function publishEvent({ eventType, payload, registerLog = true }) {
             break;
         }
         case constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED: {
-            // TODO: The logic here needs to be modified. Ideally firing CallResult with 
-            // correct participantType should do the trick but we are firing PARTICIPANT_CONNECTED because of a bug W-8601645
-            // Once the bug is fixed, this code needs to be updated
             if (validatePayload(payload, CallResult, constants.VOICE_ERROR_TYPE.CAN_NOT_HANGUP_PARTICIPANT, constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED)) { 
                 const { call } = payload;
                 const telephonyConnector = await vendorConnector.getTelephonyConnector();
@@ -1104,23 +1101,13 @@ export async function publishEvent({ eventType, payload, registerLog = true }) {
                     const activeCalls = activeCallsResult.activeCalls;
                     if (activeCalls.length === 0) {
                         dispatchEvent(constants.VOICE_EVENT_TYPE.HANGUP, call, true /* ignoring registerLog for critical event*/);
-                    } else if (call &&
-                        call.callAttributes &&
-                        call.callType !== constants.CALL_TYPE.CONSULT &&
-                        call.callAttributes.participantType === constants.PARTICIPANT_TYPE.INITIAL_CALLER) {
-                        // when there is still transfer call, based on the state of the transfer call, fire PARTICIPANT_ADDED or PARTICIPANT_CONNECTED
-                        const transferCall = Object.values(activeCalls).filter((obj) => obj['callType'] === constants.CALL_TYPE.ADD_PARTICIPANT).pop();
-                        const event = transferCall.state === constants.CALL_STATE.TRANSFERRING ? constants.VOICE_EVENT_TYPE.PARTICIPANT_ADDED : constants.VOICE_EVENT_TYPE.PARTICIPANT_CONNECTED;
-                        dispatchEvent(event, {
-                            initialCallHasEnded : true
-                        }, true /* ignoring registerLog for critical event*/)
                     } else {
                         dispatchEvent(constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED, {
                             callId:  call? call.callId : null,
                             connectionId:  call? call.connectionId : null,
                             reason: call? call.reason : null
-                        }, true /* ignoring registerLog for critical event*/);
-                    }
+                        }, true /* ignoring registerLog for critical event*/);            
+                    } 
                 }
             }
             break;
