@@ -299,8 +299,12 @@ async function channelMessageHandler(message) {
                 Validator.validateClassObject(activeCallsResult, ActiveCallsResult);
                 const activeCalls = activeCallsResult.activeCalls;
                 const { calls } = payload;
-                // after end calls from vendor side, if no more active calls, fire HANGUP, otherwise, fire PARTICIPANT_REMOVED
-                if (activeCalls.length === 0) {
+                // After end call returns from vendor side, 
+                // if the call is a consult, fire HANGUP
+                // else if no more active calls, fire HANGUP, otherwise, fire PARTICIPANT_REMOVED
+                if (calls.length > 0 && calls[0] && calls[0].callType === constants.CALL_TYPE.CONSULT) {
+                    dispatchEvent(constants.VOICE_EVENT_TYPE.HANGUP, calls[0]);
+                } else if (activeCalls.length === 0) {
                     dispatchEvent(constants.VOICE_EVENT_TYPE.HANGUP, calls);
                 } else {
                     dispatchEvent(constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED, calls.length > 0 && calls[0]);
@@ -442,6 +446,36 @@ async function channelMessageHandler(message) {
                     switch(getErrorType(e)) {
                         case constants.VOICE_ERROR_TYPE.INVALID_DESTINATION:
                             dispatchError(constants.VOICE_ERROR_TYPE.INVALID_DESTINATION, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID:
+                            dispatchError(constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.AREA_CODE_NOT_IN_DIALABLE_LIST:
+                            dispatchError(constants.VOICE_ERROR_TYPE.AREA_CODE_NOT_IN_DIALABLE_LIST, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID_E164_FORMAT:
+                            dispatchError(constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID_E164_FORMAT, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.UNAUTHORIZED_SERVICE_CALL:
+                            dispatchError(constants.VOICE_ERROR_TYPE.UNAUTHORIZED_SERVICE_CALL, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.AGENT_AT_MAXIMUM_CAPACITY:
+                            dispatchError(constants.VOICE_ERROR_TYPE.AGENT_AT_MAXIMUM_CAPACITY, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.OUTBOUND_QUEUE_MISCONFIGURED:
+                            dispatchError(constants.VOICE_ERROR_TYPE.OUTBOUND_QUEUE_MISCONFIGURED, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.CALL_THROTTLED:
+                            dispatchError(constants.VOICE_ERROR_TYPE.CALL_THROTTLED, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.TIMEOUT_ERROR:
+                            dispatchError(constants.VOICE_ERROR_TYPE.TIMEOUT_ERROR, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.UNABLE_TO_CONNECT_TO_AGENT:
+                            dispatchError(constants.VOICE_ERROR_TYPE.UNABLE_TO_CONNECT_TO_AGENT, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.AGENT_NOT_INITIALIZED:
+                            dispatchError(constants.VOICE_ERROR_TYPE.AGENT_NOT_INITIALIZED, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
                             break;
                         case constants.SHARED_ERROR_TYPE.GENERIC_ERROR:
                             dispatchError(constants.SHARED_ERROR_TYPE.GENERIC_ERROR, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
@@ -1132,7 +1166,7 @@ export async function publishEvent({ eventType, payload, registerLog = true }) {
             }
             break;
         case constants.VOICE_EVENT_TYPE.HOLD_TOGGLE: {
-            const { isThirdPartyOnHold, isCustomerOnHold, calls, isCallMerged } = payload;
+            const { isThirdPartyOnHold, isCustomerOnHold, calls, isCallMerged} = payload;
             if (validatePayload(payload, HoldToggleResult, constants.VOICE_ERROR_TYPE.CAN_NOT_TOGGLE_HOLD, constants.VOICE_EVENT_TYPE.HOLD_TOGGLE)) {
                 dispatchEvent(constants.VOICE_EVENT_TYPE.HOLD_TOGGLE, {
                     isThirdPartyOnHold,

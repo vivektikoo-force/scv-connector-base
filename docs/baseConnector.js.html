@@ -327,8 +327,12 @@ async function channelMessageHandler(message) {
                 Validator.validateClassObject(activeCallsResult, ActiveCallsResult);
                 const activeCalls = activeCallsResult.activeCalls;
                 const { calls } = payload;
-                // after end calls from vendor side, if no more active calls, fire HANGUP, otherwise, fire PARTICIPANT_REMOVED
-                if (activeCalls.length === 0) {
+                // After end call returns from vendor side, 
+                // if the call is a consult, fire HANGUP
+                // else if no more active calls, fire HANGUP, otherwise, fire PARTICIPANT_REMOVED
+                if (calls.length > 0 &amp;&amp; calls[0] &amp;&amp; calls[0].callType === constants.CALL_TYPE.CONSULT) {
+                    dispatchEvent(constants.VOICE_EVENT_TYPE.HANGUP, calls[0]);
+                } else if (activeCalls.length === 0) {
                     dispatchEvent(constants.VOICE_EVENT_TYPE.HANGUP, calls);
                 } else {
                     dispatchEvent(constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED, calls.length > 0 &amp;&amp; calls[0]);
@@ -470,6 +474,36 @@ async function channelMessageHandler(message) {
                     switch(getErrorType(e)) {
                         case constants.VOICE_ERROR_TYPE.INVALID_DESTINATION:
                             dispatchError(constants.VOICE_ERROR_TYPE.INVALID_DESTINATION, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID:
+                            dispatchError(constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.AREA_CODE_NOT_IN_DIALABLE_LIST:
+                            dispatchError(constants.VOICE_ERROR_TYPE.AREA_CODE_NOT_IN_DIALABLE_LIST, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID_E164_FORMAT:
+                            dispatchError(constants.VOICE_ERROR_TYPE.PHONE_NUMBER_NOT_VALID_E164_FORMAT, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.UNAUTHORIZED_SERVICE_CALL:
+                            dispatchError(constants.VOICE_ERROR_TYPE.UNAUTHORIZED_SERVICE_CALL, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.AGENT_AT_MAXIMUM_CAPACITY:
+                            dispatchError(constants.VOICE_ERROR_TYPE.AGENT_AT_MAXIMUM_CAPACITY, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.OUTBOUND_QUEUE_MISCONFIGURED:
+                            dispatchError(constants.VOICE_ERROR_TYPE.OUTBOUND_QUEUE_MISCONFIGURED, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.CALL_THROTTLED:
+                            dispatchError(constants.VOICE_ERROR_TYPE.CALL_THROTTLED, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.TIMEOUT_ERROR:
+                            dispatchError(constants.VOICE_ERROR_TYPE.TIMEOUT_ERROR, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.UNABLE_TO_CONNECT_TO_AGENT:
+                            dispatchError(constants.VOICE_ERROR_TYPE.UNABLE_TO_CONNECT_TO_AGENT, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
+                            break;
+                        case constants.VOICE_ERROR_TYPE.AGENT_NOT_INITIALIZED:
+                            dispatchError(constants.VOICE_ERROR_TYPE.AGENT_NOT_INITIALIZED, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
                             break;
                         case constants.SHARED_ERROR_TYPE.GENERIC_ERROR:
                             dispatchError(constants.SHARED_ERROR_TYPE.GENERIC_ERROR, getErrorMessage(e), constants.VOICE_MESSAGE_TYPE.DIAL);
@@ -1120,9 +1154,6 @@ export async function publishEvent({ eventType, payload, registerLog = true }) {
             break;
         }
         case constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED: {
-            // TODO: The logic here needs to be modified. Ideally firing CallResult with 
-            // correct participantType should do the trick but we are firing PARTICIPANT_CONNECTED because of a bug W-8601645
-            // Once the bug is fixed, this code needs to be updated
             if (validatePayload(payload, CallResult, constants.VOICE_ERROR_TYPE.CAN_NOT_HANGUP_PARTICIPANT, constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED)) { 
                 const { call } = payload;
                 const telephonyConnector = await vendorConnector.getTelephonyConnector();
@@ -1132,23 +1163,13 @@ export async function publishEvent({ eventType, payload, registerLog = true }) {
                     const activeCalls = activeCallsResult.activeCalls;
                     if (activeCalls.length === 0) {
                         dispatchEvent(constants.VOICE_EVENT_TYPE.HANGUP, call, true /* ignoring registerLog for critical event*/);
-                    } else if (call &amp;&amp;
-                        call.callAttributes &amp;&amp;
-                        call.callType !== constants.CALL_TYPE.CONSULT &amp;&amp;
-                        call.callAttributes.participantType === constants.PARTICIPANT_TYPE.INITIAL_CALLER) {
-                        // when there is still transfer call, based on the state of the transfer call, fire PARTICIPANT_ADDED or PARTICIPANT_CONNECTED
-                        const transferCall = Object.values(activeCalls).filter((obj) => obj['callType'] === constants.CALL_TYPE.ADD_PARTICIPANT).pop();
-                        const event = transferCall.state === constants.CALL_STATE.TRANSFERRING ? constants.VOICE_EVENT_TYPE.PARTICIPANT_ADDED : constants.VOICE_EVENT_TYPE.PARTICIPANT_CONNECTED;
-                        dispatchEvent(event, {
-                            initialCallHasEnded : true
-                        }, true /* ignoring registerLog for critical event*/)
                     } else {
                         dispatchEvent(constants.VOICE_EVENT_TYPE.PARTICIPANT_REMOVED, {
                             callId:  call? call.callId : null,
                             connectionId:  call? call.connectionId : null,
                             reason: call? call.reason : null
-                        }, true /* ignoring registerLog for critical event*/);
-                    }
+                        }, true /* ignoring registerLog for critical event*/);            
+                    } 
                 }
             }
             break;
@@ -1173,12 +1194,13 @@ export async function publishEvent({ eventType, payload, registerLog = true }) {
             }
             break;
         case constants.VOICE_EVENT_TYPE.HOLD_TOGGLE: {
-            const { isThirdPartyOnHold, isCustomerOnHold, calls} = payload;
+            const { isThirdPartyOnHold, isCustomerOnHold, calls, isCallMerged} = payload;
             if (validatePayload(payload, HoldToggleResult, constants.VOICE_ERROR_TYPE.CAN_NOT_TOGGLE_HOLD, constants.VOICE_EVENT_TYPE.HOLD_TOGGLE)) {
                 dispatchEvent(constants.VOICE_EVENT_TYPE.HOLD_TOGGLE, {
                     isThirdPartyOnHold,
                     isCustomerOnHold,
-                    calls
+                    calls,
+                    isCallMerged
                 }, registerLog);
             }
             break;
@@ -1369,7 +1391,7 @@ export async function publishEvent({ eventType, payload, registerLog = true }) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Tue Aug 19 2025 00:50:28 GMT+0300 (Israel Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Tue Nov 25 2025 17:31:06 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
