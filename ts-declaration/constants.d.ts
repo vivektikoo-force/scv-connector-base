@@ -151,6 +151,16 @@ declare namespace _default {
         export const WEBRTC_ERROR: string;
         export const CAN_NOT_GET_AUDIO_DEVICES: string;
         export const CAN_NOT_UPDATE_CALL: string;
+        export const AREA_CODE_NOT_IN_DIALABLE_LIST: string;
+        export const PHONE_NUMBER_NOT_VALID: string;
+        export const PHONE_NUMBER_NOT_VALID_E164_FORMAT: string;
+        export const UNAUTHORIZED_SERVICE_CALL: string;
+        export const AGENT_AT_MAXIMUM_CAPACITY: string;
+        export const OUTBOUND_QUEUE_MISCONFIGURED: string;
+        export const CALL_THROTTLED: string;
+        export const TIMEOUT_ERROR: string;
+        export const UNABLE_TO_CONNECT_TO_AGENT: string;
+        export const AGENT_NOT_INITIALIZED: string;
     }
     namespace AGENT_STATUS {
         const ONLINE: string;

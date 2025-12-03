@@ -47,6 +47,16 @@ export namespace Constants {
         const INVALID_DESTINATION: string;
         const CAN_NOT_UPDATE_PHONE_NUMBER: string;
         const INVALID_PARAMS: string;
+        const AREA_CODE_NOT_IN_DIALABLE_LIST: string;
+        const PHONE_NUMBER_NOT_VALID: string;
+        const PHONE_NUMBER_NOT_VALID_E164_FORMAT: string;
+        const UNAUTHORIZED_SERVICE_CALL: string;
+        const AGENT_AT_MAXIMUM_CAPACITY: string;
+        const OUTBOUND_QUEUE_MISCONFIGURED: string;
+        const CALL_THROTTLED: string;
+        const TIMEOUT_ERROR: string;
+        const UNABLE_TO_CONNECT_TO_AGENT: string;
+        const AGENT_NOT_INITIALIZED: string;
     }
     const AGENT_STATUS: {
         ONLINE: string;
