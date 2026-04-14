@@ -76,9 +76,9 @@ export const Constants = {
         UPDATE_AUDIO_STATS: constants.VOICE_EVENT_TYPE.UPDATE_AUDIO_STATS,
         CALL_BARGED_IN: constants.VOICE_EVENT_TYPE.CALL_BARGED_IN,
         SUPERVISOR_BARGED_IN: constants.VOICE_EVENT_TYPE.SUPERVISOR_BARGED_IN,
-        SUPERVISOR_CALL_STARTED : constants.VOICE_EVENT_TYPE.SUPERVISOR_CALL_STARTED,
+        SUPERVISOR_CALL_STARTED: constants.VOICE_EVENT_TYPE.SUPERVISOR_CALL_STARTED,
         SUPERVISOR_CALL_CONNECTED: constants.VOICE_EVENT_TYPE.SUPERVISOR_CALL_CONNECTED,
-        SUPERVISOR_HANGUP : constants.VOICE_EVENT_TYPE.SUPERVISOR_HANGUP,
+        SUPERVISOR_HANGUP: constants.VOICE_EVENT_TYPE.SUPERVISOR_HANGUP,
         SHOW_TRANSFER_VIEW: constants.VOICE_EVENT_TYPE.SHOW_TRANSFER_VIEW,
         AUDIO_STATS: constants.VOICE_EVENT_TYPE.AUDIO_STATS,
         CALL_UPDATED: constants.VOICE_EVENT_TYPE.CALL_UPDATED
@@ -207,7 +207,7 @@ export class CustomError extends Error {
     /**
      * Create Phone
      * @param {object} param
-     * @param {PHONE_TYPE} param.type
+     * @param {string} param.type - One of the PHONE_TYPE values (see Constants.PHONE_TYPE)
      * @param {string} [param.number]
      */
     constructor({ type, number}) {
@@ -537,7 +537,7 @@ export class ContactsResult {
      * Create ContactsResult
      * @param {object} param
      * @param {Contact[]} [param.contacts]
-     * @param {Array} [param.contactTypes]
+     * @param {Array&lt;string>} [param.contactTypes] - Contact types (see Constants.CONTACT_TYPE)
      */
     constructor({ contacts = [], contactTypes = [] }) {
         if (contacts.length > 0) {
@@ -564,7 +564,7 @@ export class PhoneContactsResult extends ContactsResult {
      * Create PhoneContactsResult
      * @param {object} param
      * @param {Contact[]} [param.contacts]
-     * @param {Array} [param.contactTypes]
+     * @param {Array&lt;string>} [param.contactTypes] - Contact types (see Constants.CONTACT_TYPE)
      */
     constructor({ contacts = [], contactTypes = [] }) {
         super({ contacts, contactTypes });
@@ -617,9 +617,9 @@ export class HoldToggleResult {
     /**
      * Create HoldToggleResult
      * @param {object} param
-     * @param {boolean} param.isThirdPartyOnHold
+     * @param {boolean} [param.isThirdPartyOnHold] - Deprecated. Whether the third party is on hold.
      * @param {boolean} param.isCustomerOnHold
-     * @param {PhoneCall[]} [param.calls]
+     * @param {PhoneCall[]} param.calls - Required. One or more calls.
      * @param {boolean} param.isCallMerged
      */
     constructor({ isThirdPartyOnHold, isCustomerOnHold, calls , isCallMerged}) {
@@ -689,6 +689,7 @@ export class InitResult {
 export class DialOptions {
     /**
      * Create DialOptions
+     * @param {object} param
      * @param {boolean} [param.isCallback]
      * @param {boolean} [param.isConsultCall]
      */
@@ -719,6 +720,8 @@ export class SetAgentStateResult extends GenericResult {
     /**
      * Create AgentState
      * @param {object} param
+     * @param {boolean} param.success
+     * @param {boolean} [param.isStatusSyncNeeded]
      */
     constructor({ success, isStatusSyncNeeded = true }) {
         super({ success });
@@ -733,6 +736,8 @@ export class SetAgentConfigResult extends GenericResult {
     /**
      * Create AgentConfig
      * @param {object} param
+     * @param {boolean} param.success
+     * @param {boolean} [param.isSystemEvent]
      */
     constructor({ success, isSystemEvent = false }) {
         super({ success });
@@ -898,15 +903,15 @@ export class Contact {
      * Create a Contact.
      * @param {object} param
      * @param {string} [param.id] - The unique contactId
-     * @param {("PhoneBook"|"Queue"|"PhoneNumber"|"Agent")} [param.type] - The type of the contact, one of the CONTACT_TYPE values
+     * @param {string} [param.type] - The type of the contact, one of the CONTACT_TYPE values
      * @param {string} [param.name] - The label for this contact to be displayed in the UI
-     * @param {("Transfer"|"Conference"|"All")} [param.listType] - The type of contact List, one of the CONTACT_LIST_TYPE values. Messaging Only
+     * @param {string} [param.listType] - The type of contact List, one of the CONTACT_LIST_TYPE values. Messaging Only
      * @param {string} [param.phoneNumber] - The phone number associcated with this contact
      * @param {string} [param.prefix] - Any prefix to be dialed before dialing the number (i.e. +1)
      * @param {string} [param.extension] - Any extension to be dialed after dialing the number
      * @param {string} [param.endpointARN]
      * @param {string} [param.queue]
-     * @param {string} [param.availability]
+     * @param {string} [param.availability] - One of Constants.AGENT_AVAILABILITY
      * @param {string} [param.recordId] - Salesforce RecordId
      * @param {string} [param.description] - Contact Description
      * @param {string} [param.queueWaitTime] - Estimated Queue Wait Time
@@ -975,8 +980,8 @@ export class PhoneCallAttributes {
      * Create PhoneCallAttributes.
      * @param {object} param
      * @param {string} [param.voiceCallId] - The voice call id
-     * @param {PARTICIPANT_TYPE} [param.participantType] - The participant type of the call
-     * @param {DIALER_TYPE} [param.dialerType] - The dialer type of the call
+     * @param {string} [param.participantType] - Deprecated. The participant type of the call. Will be removed in a future version. (Constants.PARTICIPANT_TYPE)
+     * @param {string} [param.dialerType] - The dialer type of the call (Constants.DIALER_TYPE)
      * @param {string} [param.parentId] - The parent call id of the call
      * @param {boolean} [param.isOnHold]
      * @param {boolean} [param.hasSupervisorBargedIn]
@@ -1023,8 +1028,8 @@ export class PhoneCall {
      * @param {object} param
      * @param {string} [param.callId] - The unique callId. This is a required parameter
      * @param {string} [param.connectionId] - optional connectionID representing a call leg.
-     * @param {CALL_TYPE} [param.callType] - The type of the call, one of the CALL_TYPE values
-     * @param {CALL_SUBTYPE} [param.callSubtype] - The subtype of the call, one of the CALL_SUBTYPE values
+     * @param {string} [param.callType] - The type of the call, one of the CALL_TYPE values (Constants.CALL_TYPE)
+     * @param {string} [param.callSubtype] - The subtype of the call, one of the CALL_SUBTYPE values (Constants.CALL_SUBTYPE)
      * @param {Contact} [param.contact] - The Call Target / Contact . TODO: to be deprecated, replace with toContact
      * @param {string} [param.state] - The state of the call, i.e. ringing, connected, declined, failed 
      * @param {PhoneCallAttributes} [param.callAttributes] - Any additional call attributes
@@ -1135,7 +1140,7 @@ export class TelephonyConnector {
     /**
      * End call
      * @param {PhoneCall} call - The call to be ended
-     * @param {AGENT_STATUS} agentStatus
+     * @param {string} agentStatus - One of Constants.AGENT_STATUS
      * @returns {Promise&lt;HangupResult>} 
      * 
      */
@@ -1304,7 +1309,7 @@ export class TelephonyConnector {
     /**
      * Supervise a call
      * @param {SupervisedCallInfo} supervisedCallInfo CallInfo of the call to be supervised
-     * @returns {Promise &lt;SuperviseCallResult>}
+     * @returns {Promise&lt;SuperviseCallResult>}
      */
     superviseCall(supervisedCallInfo) {
         throw new Error('Not implemented');
@@ -1313,7 +1318,7 @@ export class TelephonyConnector {
     /**
      * Supervisor disconnects from a call
      * @param {SupervisedCallInfo} supervisedCallInfo CallInfo of the supervised call to be disconnected
-     * @returns {Promise &lt;SupervisorHangupResult>}
+     * @returns {Promise&lt;SupervisorHangupResult>}
      */
     supervisorDisconnect(supervisedCallInfo) {
         throw new Error('Not implemented');
@@ -1322,7 +1327,7 @@ export class TelephonyConnector {
     /**
      * Supervisor Barges into a ongoing call
      * @param {SupervisedCallInfo} supervisedCallInfo CallInfo of the supervised call which supervisor barges in
-     * @returns {Promise &lt;SuperviseCallResult>}
+     * @returns {Promise&lt;SuperviseCallResult>}
      */
     supervisorBargeIn(supervisedCallInfo) {
         throw new Error('Not implemented');
@@ -1363,8 +1368,8 @@ export class VendorConnector {
 
     /**
      * Set agent status
-     * @param {Constants.AGENT_STATUS} agentStatus
-     * @param {StatusInfo} statusInfo
+     * @param {string} agentStatus - One of Constants.AGENT_STATUS
+     * @param {AgentStatusInfo} statusInfo
      * @param {Boolean} enqueueNextState - flag to determine if this status change request should be enqueued if neccessary
      * @returns {Promise&lt;GenericResult>} 
      * 
@@ -1409,7 +1414,7 @@ export class VendorConnector {
     /**
      * Sends the logs with a logLevel and payload to the vendor connector.
      * Does a no-op, if not implemented.
-     * @param {String} logLevel Log Level (INFO, WARN, ERROR)
+     * @param {string} logLevel Log Level (INFO, ERROR) (Constants.LOG_LEVEL)
      * @param {String} message Message to be logged
      * @param {Object} payload An optional payload to be logged
      */
@@ -1427,6 +1432,7 @@ export class VendorConnector {
 
     /**
      * Returns a list of valid device IDs that can be used for the speaker and microphone devices.
+     * @returns {Promise&lt;AudioDevicesResult>}
      */
     getAudioDevices() {
         throw new Error('Not implemented');
@@ -1512,7 +1518,7 @@ export class AgentWork {
      * @param {object} param
      * @param {string} [param.workItemId] - Salesforce agent work item Id
      * @param {string} [param.workId] - Salesforce work Id
-     * @param {WORK_EVENT} [param.workEvent] - The work lifecycle event
+     * @param {string} [param.workEvent] - The work lifecycle event (Constants.WORK_EVENT)
      */
     constructor({ workItemId, workId, workEvent }) {
         Validator.validateEnum(workEvent, Object.values(constants.WORK_EVENT));
@@ -1600,6 +1606,38 @@ export class AgentVendorStatusInfo {
     }
 }
 
+/**
+ * NOTE: SALESFORCE INTERNAL USE ONLY
+ * Class representing global resiliency region change event.
+ */
+export class GlobalResiliencyRegionChangedEvent {
+    /**
+     * Create a GlobalResiliencyRegionChangedEvent.
+     * @param {object} param
+     * @param {string} [param.activeRegion] - new active region
+     */
+    constructor({activeRegion}) {
+        Validator.validateString(activeRegion);
+        this.activeRegion = activeRegion;
+    }
+}
+
+/**
+ * NOTE: SALESFORCE INTERNAL USE ONLY
+ * Class representing global resiliency failover completed event.
+ */
+export class GlobalResiliencyFailoverCompletedEvent {
+    /**
+     * Create a GlobalResiliencyFailoverCompletedEvent.
+     * @param {object} param
+     * @param {string} [param.activeRegion] - new active region
+     */
+    constructor({activeRegion}) {
+        Validator.validateString(activeRegion);
+        this.activeRegion = activeRegion;
+    }
+}
+
 /** 
  * Class representing a Supervised Call Info. This object is used to represent 
  * information about a call that is being supervised by a supervisor.
@@ -1611,7 +1649,7 @@ export class SupervisedCallInfo {
      * @param {string} [param.callId] - The unique supervised vendor call ID (required)
      * @param {string} [param.connectionId] - optional connectionID representing a call leg.
      * @param {string} [param.voiceCallId] - The supervised salesforce voice call ID
-     * @param {string} [param.callType] - The type of the call, one of the CALL_TYPE values
+     * @param {string} [param.callType]- The type of the call, one of the CALL_TYPE values (Constants.CALL_TYPE)
      * @param {string} [param.from] - From phone number (for Inbound calls)
      * @param {string} [param.to] - To phone number (for Outbound calls)
      * @param {string} [param.supervisorName] - The supervisor name (shown to the supervised agent on barge in)
@@ -1767,7 +1805,7 @@ export class ShowStorageAccessResult {
  * @param {string} param.contains
  * @param {number} param.limit
  * @param {number} param.offset
- * @param {CONTACTS_FILTER_TYPES[]} param.types 
+ * @param {Array&lt;string>} param.types - Filter types (Constants.CONTACTS_FILTER_TYPES)
  */ 
 export class ContactsFilter {
     constructor(param) {
@@ -1822,13 +1860,13 @@ export class ACWInfo {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveCallsResult.html">ActiveCallsResult</a></li><li><a href="ACWInfo.html">ACWInfo</a></li><li><a href="AgentConfig.html">AgentConfig</a></li><li><a href="AgentConfigResult.html">AgentConfigResult</a></li><li><a href="AgentStatusInfo.html">AgentStatusInfo</a></li><li><a href="AgentVendorStatusInfo.html">AgentVendorStatusInfo</a></li><li><a href="AgentWork.html">AgentWork</a></li><li><a href="AudioDevicesResult.html">AudioDevicesResult</a></li><li><a href="AudioStats.html">AudioStats</a></li><li><a href="AudioStatsElement.html">AudioStatsElement</a></li><li><a href="CallInfo.html">CallInfo</a></li><li><a href="CallResult.html">CallResult</a></li><li><a href="Contact.html">Contact</a></li><li><a href="ContactsFilter.html">ContactsFilter</a></li><li><a href="ContactsResult.html">ContactsResult</a></li><li><a href="CustomError.html">CustomError</a></li><li><a href="DialOptions.html">DialOptions</a></li><li><a href="GenericResult.html">GenericResult</a></li><li><a href="HangupResult.html">HangupResult</a></li><li><a href="HidDevice.html">HidDevice</a></li><li><a href="HoldToggleResult.html">HoldToggleResult</a></li><li><a href="InitResult.html">InitResult</a></li><li><a href="LogoutResult.html">LogoutResult</a></li><li><a href="MuteToggleResult.html">MuteToggleResult</a></li><li><a href="ParticipantResult.html">ParticipantResult</a></li><li><a href="Phone.html">Phone</a></li><li><a href="PhoneCall.html">PhoneCall</a></li><li><a href="PhoneCallAttributes.html">PhoneCallAttributes</a></li><li><a href="PhoneContactsResult.html">PhoneContactsResult</a></li><li><a href="RecordingToggleResult.html">RecordingToggleResult</a></li><li><a href="SetAgentConfigResult.html">SetAgentConfigResult</a></li><li><a href="SetAgentStateResult.html">SetAgentStateResult</a></li><li><a href="SharedCapabilitiesResult.html">SharedCapabilitiesResult</a></li><li><a href="ShowStorageAccessResult.html">ShowStorageAccessResult</a></li><li><a href="SignedRecordingUrlResult.html">SignedRecordingUrlResult</a></li><li><a href="StateChangeResult.html">StateChangeResult</a></li><li><a href="StatsInfo.html">StatsInfo</a></li><li><a href="SuperviseCallResult.html">SuperviseCallResult</a></li><li><a href="SupervisedCallInfo.html">SupervisedCallInfo</a></li><li><a href="SupervisorHangupResult.html">SupervisorHangupResult</a></li><li><a href="TelephonyConnector.html">TelephonyConnector</a></li><li><a href="VendorConnector.html">VendorConnector</a></li><li><a href="VoiceCapabilitiesResult.html">VoiceCapabilitiesResult</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CONNECTOR_CONFIG_EXCEPTION_FIELDS">CONNECTOR_CONFIG_EXCEPTION_FIELDS</a></li><li><a href="global.html#CONNECTOR_CONFIG_EXPOSED_FIELDS">CONNECTOR_CONFIG_EXPOSED_FIELDS</a></li><li><a href="global.html#CONNECTOR_CONFIG_EXPOSED_FIELDS_STARTSWITH">CONNECTOR_CONFIG_EXPOSED_FIELDS_STARTSWITH</a></li><li><a href="global.html#dispatchCustomError">dispatchCustomError</a></li><li><a href="global.html#dispatchError">dispatchError</a></li><li><a href="global.html#dispatchEvent">dispatchEvent</a></li><li><a href="global.html#dispatchEventLog">dispatchEventLog</a></li><li><a href="global.html#downloadData">downloadData</a></li><li><a href="global.html#downloadLogs">downloadLogs</a></li><li><a href="global.html#getErrorMessage">getErrorMessage</a></li><li><a href="global.html#getErrorType">getErrorType</a></li><li><a href="global.html#getLogs">getLogs</a></li><li><a href="global.html#initializeConnector">initializeConnector</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#publishError">publishError</a></li><li><a href="global.html#publishEvent">publishEvent</a></li><li><a href="global.html#publishLog">publishLog</a></li><li><a href="global.html#sanitizePayload">sanitizePayload</a></li><li><a href="global.html#setConnectorReady">setConnectorReady</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveCallsResult.html">ActiveCallsResult</a></li><li><a href="ACWInfo.html">ACWInfo</a></li><li><a href="AgentConfig.html">AgentConfig</a></li><li><a href="AgentConfigResult.html">AgentConfigResult</a></li><li><a href="AgentStatusInfo.html">AgentStatusInfo</a></li><li><a href="AgentVendorStatusInfo.html">AgentVendorStatusInfo</a></li><li><a href="AgentWork.html">AgentWork</a></li><li><a href="AudioDevicesResult.html">AudioDevicesResult</a></li><li><a href="AudioStats.html">AudioStats</a></li><li><a href="AudioStatsElement.html">AudioStatsElement</a></li><li><a href="CallInfo.html">CallInfo</a></li><li><a href="CallResult.html">CallResult</a></li><li><a href="Contact.html">Contact</a></li><li><a href="ContactsFilter.html">ContactsFilter</a></li><li><a href="ContactsResult.html">ContactsResult</a></li><li><a href="CustomError.html">CustomError</a></li><li><a href="DialOptions.html">DialOptions</a></li><li><a href="GenericResult.html">GenericResult</a></li><li><a href="GlobalResiliencyFailoverCompletedEvent.html">GlobalResiliencyFailoverCompletedEvent</a></li><li><a href="GlobalResiliencyRegionChangedEvent.html">GlobalResiliencyRegionChangedEvent</a></li><li><a href="HangupResult.html">HangupResult</a></li><li><a href="HidDevice.html">HidDevice</a></li><li><a href="HoldToggleResult.html">HoldToggleResult</a></li><li><a href="InitResult.html">InitResult</a></li><li><a href="LogoutResult.html">LogoutResult</a></li><li><a href="MuteToggleResult.html">MuteToggleResult</a></li><li><a href="ParticipantResult.html">ParticipantResult</a></li><li><a href="Phone.html">Phone</a></li><li><a href="PhoneCall.html">PhoneCall</a></li><li><a href="PhoneCallAttributes.html">PhoneCallAttributes</a></li><li><a href="PhoneContactsResult.html">PhoneContactsResult</a></li><li><a href="RecordingToggleResult.html">RecordingToggleResult</a></li><li><a href="SetAgentConfigResult.html">SetAgentConfigResult</a></li><li><a href="SetAgentStateResult.html">SetAgentStateResult</a></li><li><a href="SharedCapabilitiesResult.html">SharedCapabilitiesResult</a></li><li><a href="ShowStorageAccessResult.html">ShowStorageAccessResult</a></li><li><a href="SignedRecordingUrlResult.html">SignedRecordingUrlResult</a></li><li><a href="StateChangeResult.html">StateChangeResult</a></li><li><a href="StatsInfo.html">StatsInfo</a></li><li><a href="SuperviseCallResult.html">SuperviseCallResult</a></li><li><a href="SupervisedCallInfo.html">SupervisedCallInfo</a></li><li><a href="SupervisorHangupResult.html">SupervisorHangupResult</a></li><li><a href="TelephonyConnector.html">TelephonyConnector</a></li><li><a href="VendorConnector.html">VendorConnector</a></li><li><a href="VoiceCapabilitiesResult.html">VoiceCapabilitiesResult</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CONNECTOR_CONFIG_EXCEPTION_FIELDS">CONNECTOR_CONFIG_EXCEPTION_FIELDS</a></li><li><a href="global.html#CONNECTOR_CONFIG_EXPOSED_FIELDS">CONNECTOR_CONFIG_EXPOSED_FIELDS</a></li><li><a href="global.html#CONNECTOR_CONFIG_EXPOSED_FIELDS_STARTSWITH">CONNECTOR_CONFIG_EXPOSED_FIELDS_STARTSWITH</a></li><li><a href="global.html#dispatchCustomError">dispatchCustomError</a></li><li><a href="global.html#dispatchError">dispatchError</a></li><li><a href="global.html#dispatchEvent">dispatchEvent</a></li><li><a href="global.html#dispatchEventLog">dispatchEventLog</a></li><li><a href="global.html#downloadData">downloadData</a></li><li><a href="global.html#downloadLogs">downloadLogs</a></li><li><a href="global.html#getErrorMessage">getErrorMessage</a></li><li><a href="global.html#getErrorType">getErrorType</a></li><li><a href="global.html#getLogs">getLogs</a></li><li><a href="global.html#initializeConnector">initializeConnector</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#publishError">publishError</a></li><li><a href="global.html#publishEvent">publishEvent</a></li><li><a href="global.html#publishLog">publishLog</a></li><li><a href="global.html#sanitizePayload">sanitizePayload</a></li><li><a href="global.html#setConnectorReady">setConnectorReady</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Tue Nov 25 2025 17:31:06 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Tue Apr 14 2026 01:14:03 GMT-0700 (Pacific Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

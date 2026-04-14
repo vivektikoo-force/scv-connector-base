@@ -19,7 +19,8 @@ import {
 import { ActiveCallsResult, InitResult, CallResult, HoldToggleResult, GenericResult, ContactsResult, PhoneContactsResult, MuteToggleResult,
     ParticipantResult, RecordingToggleResult, Contact, PhoneCall, CallInfo, VendorConnector, TelephonyConnector, SharedCapabilitiesResult, VoiceCapabilitiesResult,
     AgentConfigResult, Phone, HangupResult, SignedRecordingUrlResult, LogoutResult, AudioStats, StatsInfo, AudioStatsElement,
-    SuperviseCallResult, SupervisorHangupResult, SupervisedCallInfo, ShowStorageAccessResult, AudioDevicesResult, ACWInfo, SetAgentConfigResult, SetAgentStateResult } from '../main/index';
+    SuperviseCallResult, SupervisorHangupResult, SupervisedCallInfo, ShowStorageAccessResult, AudioDevicesResult, ACWInfo, SetAgentConfigResult, SetAgentStateResult,
+    GlobalResiliencyRegionChangedEvent, GlobalResiliencyFailoverCompletedEvent } from '../main/index';
 import baseConstants from '../main/constants';
 
 import { log } from '../main/logger';
@@ -3719,6 +3720,60 @@ describe('SCVConnectorBase tests', () => {
                     eventType: constants.SHARED_EVENT_TYPE.AFTER_CONVERSATION_WORK_ENDED,
                     payload: {
                         errorType: constants.SHARED_ERROR_TYPE.INVALID_ACW_INFO,
+                        error: expect.anything()
+                    },
+                    isError: true
+                });
+            });
+        });
+
+        describe('GLOBAL_RESILIENCY_REGION_CHANGED event', () => {
+            it('Should dispatch GLOBAL_RESILIENCY_REGION_CHANGED with payload', async () => {
+                const payload = new GlobalResiliencyRegionChangedEvent({ activeRegion: 'us-east-1' });
+                publishEvent({ eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_REGION_CHANGED, payload });
+                assertChannelPortPayload({ eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_REGION_CHANGED, payload });
+                assertChannelPortPayloadEventLog({
+                    eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_REGION_CHANGED,
+                    payload,
+                    isError: false
+                });
+            });
+            it('Should dispatch an error on an invalid GLOBAL_RESILIENCY_REGION_CHANGED payload', async () => {
+                publishEvent({ eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_REGION_CHANGED, payload: invalidResult });
+                assertChannelPortPayload({ eventType: constants.SHARED_EVENT_TYPE.ERROR, payload: {
+                    message: constants.SHARED_ERROR_TYPE.GLOBAL_RESILIENCY_INVALID_REGION_CHANGE_EVENT
+                }});
+                assertChannelPortPayloadEventLog({
+                    eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_REGION_CHANGED,
+                    payload: {
+                        errorType: constants.SHARED_ERROR_TYPE.GLOBAL_RESILIENCY_INVALID_REGION_CHANGE_EVENT,
+                        error: expect.anything()
+                    },
+                    isError: true
+                });
+            });
+        });
+
+        describe('GLOBAL_RESILIENCY_FAILOVER_COMPLETED event', () => {
+            it('Should dispatch GLOBAL_RESILIENCY_FAILOVER_COMPLETED with payload', async () => {
+                const payload = new GlobalResiliencyFailoverCompletedEvent({ activeRegion: 'us-west-2' });
+                publishEvent({ eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_FAILOVER_COMPLETED, payload });
+                assertChannelPortPayload({ eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_FAILOVER_COMPLETED, payload });
+                assertChannelPortPayloadEventLog({
+                    eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_FAILOVER_COMPLETED,
+                    payload,
+                    isError: false
+                });
+            });
+            it('Should dispatch an error on an invalid GLOBAL_RESILIENCY_FAILOVER_COMPLETED payload', async () => {
+                publishEvent({ eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_FAILOVER_COMPLETED, payload: invalidResult });
+                assertChannelPortPayload({ eventType: constants.SHARED_EVENT_TYPE.ERROR, payload: {
+                    message: constants.SHARED_ERROR_TYPE.GLOBAL_RESILIENCY_INVALID_FAILOVER_EVENT
+                }});
+                assertChannelPortPayloadEventLog({
+                    eventType: constants.SHARED_EVENT_TYPE.GLOBAL_RESILIENCY_FAILOVER_COMPLETED,
+                    payload: {
+                        errorType: constants.SHARED_ERROR_TYPE.GLOBAL_RESILIENCY_INVALID_FAILOVER_EVENT,
                         error: expect.anything()
                     },
                     isError: true
