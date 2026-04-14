@@ -51,5 +51,7 @@ export {
     ACWInfo,
     SetAgentConfigResult,
     SetAgentStateResult,
-    HidDevice
+    HidDevice,
+    GlobalResiliencyRegionChangedEvent,
+    GlobalResiliencyFailoverCompletedEvent
 } from './types.js';
